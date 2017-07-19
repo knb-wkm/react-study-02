@@ -5,17 +5,20 @@ import registerServiceWorker from './registerServiceWorker';
 const App = () => {
   const title = "react sample";
   const books = [
-    {name: "react tutorial", price: 3000},
-    {name: "redux tutorial", price: 6000},
+    {name: "react tutorial", price: 3000, stock: 10},
+    {name: "redux tutorial", price: 6000, stock: 0},
   ];
 
   const renderBook = (book) => {
-    const expensive = book.price > 5000 ? "!!!" : "";
-
+    const style = {
+      textDecoration: book.stock === 0 ? "line-through" : "none"
+    };
+    
     return (
-      <ul>
+      <ul style={style}>
+        <li>{book.stock}</li>
         <li>{book.name}</li>
-        <li>{book.price}{expensive}</li>
+        <li>{book.price}</li>
       </ul>
     );
   };
