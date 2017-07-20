@@ -1,15 +1,29 @@
-import React from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import registerServiceWorker from './registerServiceWorker';
 
-const App = () => {
-  const title = "todo app";
-  const todos = [
-    {id: 1, name: "react勉強する", done: true},
-    {id: 2, name: "更にreactを勉強する", done: false}
-  ];
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      todos: [
+        {id: 1, name: "react勉強する", done: true},
+        {id: 2, name: "更にreactを勉強する", done: false}
+      ]
+    };
+  }
 
-  const renderTodo = (todo) => {
+  title = "todo app";
+
+  toggleTodo = (todo_id) => {
+    this.setState({
+      todos: this.state.todos.map(
+        todo => todo.id === todo_id ? {...todo, done: !todo.done} : todo
+      )
+    });
+  };
+
+  renderTodo = (todo) => {
     const style = {
       textDecoration: todo.done ? "line-through" : "none"
     };
@@ -17,16 +31,19 @@ const App = () => {
     return (
       <ul style={style}>
         <li>{todo.id}: {todo.name}</li>
+        <li onClick={() => this.toggleTodo(todo.id)}>toggle</li>
       </ul>
     );
   };
 
-  return (
-    <div>
-      <h2>{title}</h2>
-      {todos.map(todo => renderTodo(todo))}
-    </div>
-  );
+  render() {
+    return (
+      <div>
+        <h2>{this.title}</h2>
+        {this.state.todos.map(todo => this.renderTodo(todo))}
+      </div>
+    );
+  }
 };
 
 ReactDOM.render(
