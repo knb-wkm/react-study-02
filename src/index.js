@@ -1,6 +1,31 @@
 import React, { Component } from 'react';
+import PropTypes from "prop-types";
 import ReactDOM from 'react-dom';
 import registerServiceWorker from './registerServiceWorker';
+
+class Todo extends Component {
+  render() {
+    const { todo, toggleTodo } = this.props;
+
+    const style = {
+      textDecoration: todo.done ? "line-through" : "none"
+    };
+    
+    return (
+      <ul style={style}>
+        <li>{todo.id}: {todo.name}</li>
+        <button onClick={() => toggleTodo(todo.id)}>
+          toggle todo
+        </button>
+      </ul>
+    );
+  }
+}
+
+Todo.propTypes = {
+  todo: PropTypes.number.isRequired,
+  toggleTodo: PropTypes.func.isRequired
+};
 
 class App extends Component {
   constructor(props) {
@@ -16,21 +41,6 @@ class App extends Component {
   render() {
     const title = "todo app";
 
-    const renderTodo = (todo) => {
-      const style = {
-        textDecoration: todo.done ? "line-through" : "none"
-      };
-      
-      return (
-        <ul style={style}>
-          <li>{todo.id}: {todo.name}</li>
-          <button onClick={() => toggleTodo(todo.id)}>
-            toggle todo
-          </button>
-        </ul>
-      );
-    };
-
     const toggleTodo = (todo_id) => {
       this.setState({
         todos: this.state.todos.map(
@@ -40,10 +50,33 @@ class App extends Component {
       });
     };
 
+    const addTodo = (e) => {
+      if (e.key !== "Enter") return;
+
+      const next_id = this.state.todos.slice()
+            .sort( (a, b) => b.id - a.id )[0].id + 1;
+
+      const newTodo = {
+        id: next_id,
+        name: this.refs.todoText.value,
+        done: false
+      };
+
+      this.setState({ todos: [...this.state.todos, newTodo] });
+
+      this.refs.todoText.value = "";
+    };
+
     return (
       <div>
         <h2>{title}</h2>
-        {this.state.todos.map(todo => renderTodo(todo))}
+
+        <input
+          type="text"
+          ref="todoText"
+          onKeyPress={(e) => addTodo(e)} />
+
+          {this.state.todos.map(todo => <Todo todo={todo} toggleTodo={toggleTodo} />)}
       </div>
     );
   }
