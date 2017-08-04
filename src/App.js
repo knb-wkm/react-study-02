@@ -8,7 +8,8 @@ class App extends Component {
       todos: [
         {id: 1, name: "react勉強する", done: true},
         {id: 2, name: "更にreactを勉強する", done: false}
-      ]
+      ],
+      hideDone: false
     };
   }
 
@@ -41,6 +42,14 @@ class App extends Component {
       this.refs.todoText.value = "";
     };
 
+    const hideDone = () => {
+      this.setState({ hideDone: !this.state.hideDone });
+    };
+
+    const todos = this.state.hideDone
+          ? this.state.todos.filter(todo => todo.done === false)
+          : this.state.todos;
+
     return (
       <div>
         <h2>{title}</h2>
@@ -50,7 +59,9 @@ class App extends Component {
           ref="todoText"
           onKeyPress={(e) => addTodo(e)} />
 
-          {this.state.todos.map(todo => <Todo todo={todo} toggleTodo={toggleTodo} />)}
+          <button onClick={hideDone}>hide done</button>
+
+          {todos.map(todo => <Todo todo={todo} toggleTodo={toggleTodo} />)}
       </div>
     );
   }
