@@ -61,7 +61,8 @@ class App extends Component {
 
           <button onClick={hideDone}>hide done</button>
 
-          {todos.map(todo => <Todo todo={todo} toggleTodo={toggleTodo} />)}
+          {todos.map(todo => 
+          <Todo todo={todo} toggleTodo={toggleTodo} />)}
       </div>
     );
   }
