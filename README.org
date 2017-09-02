@@ -564,3 +564,4 @@ describe("storeのテスト", () => {
 -      ],
        hideDone: false
 #+end_src
+* 終了
