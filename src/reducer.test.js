@@ -7,7 +7,13 @@ const todoReducer = (state = initialState, action) => {
   switch ( action.type ) {
   case "ADD_TODO":
     // [ ...ary, obj ] は ary.dconcat(obj)のシンタックスシュガー
-    return [...state, action.todo];
+    const newTodo = {
+      id: state.slice().sort( (a, b) => b.id - a.id )[0].id + 1,
+      name: action.name,
+      done: false
+    };
+
+    return [...state, newTodo];
   case "TOGGLE_TODO":
     return state.map(todo => {
       return todo.id === action.todo_id
@@ -19,10 +25,10 @@ const todoReducer = (state = initialState, action) => {
   }
 };
 
-const addTodo = (todo) => {
+const addTodo = (name) => {
   return {
     type: "ADD_TODO",
-    todo: todo
+    name: name
   };
 };
 
@@ -36,14 +42,14 @@ const toggleTodo = (todo_id) => {
 describe("todoReducerのテスト", () => {
 
   it("ADD_TODO", () => {
-    const newTodo = { id: 3, name: "reducerを勉強する", done: false };
+    const newTodo = "reducerを勉強する";
     const result = todoReducer(initialState, addTodo(newTodo));
 
     // 期待する値はinitialStateにnewTodoをconcatしたもの
     const expected = [
       {id: 1, name: "react勉強する", done: true},
       {id: 2, name: "更にreactを勉強する", done: false},
-      newTodo
+      {id: 3, name: newTodo, done: false}
     ];
     expect(result).toEqual(expected);
   });
