@@ -1,3 +1,5 @@
+import { createStore } from "redux";
+
 const initialState = [
   {id: 1, name: "react勉強する", done: true},
   {id: 2, name: "更にreactを勉強する", done: false}
@@ -39,6 +41,8 @@ const toggleTodo = (todo_id) => {
   };
 };
 
+const store = createStore(todoReducer);
+
 describe("todoReducerのテスト", () => {
 
   it("ADD_TODO", () => {
@@ -67,4 +71,18 @@ describe("todoReducerのテスト", () => {
 
 });
 
+describe("storeのテスト", () => {
+  it("ADD_TODO", () => {
+    const newTodo = "storeを勉強する";
+    store.dispatch(addTodo(newTodo));
+    const result = store.getState();
+    const expected = [
+      {id: 1, name: "react勉強する", done: true},
+      {id: 2, name: "更にreactを勉強する", done: false},
+      {id: 3, name: newTodo, done: false}
+    ];
+
+    expect(result).toEqual(expected);
+  });
+});
   
