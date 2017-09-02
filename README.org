@@ -1,517 +1,566 @@
-#+title: react勉強会 1回目
-#+STARTUP: indent
+#+title: react勉強会 2回目
+#+STARTUP: indent inlineimages
 #+options: ^:nil \n:t
 
-* react概要
-- reactjs
-  facebookが開発したライブラリ
-  viewに特化している
+* 前回のおさらい
+- reactはviewを担当するライブラリ(frameworkと呼ぶには薄すぎる)
 
-- flux思想
-  facebookが提案したフロントサイドにおける状態管理の思想
-  reduxはflux思想を基に実装されておりreactとの組み合わせにおいては
-  現在主流となっている。
+- reactのviewはコンポーネントという単位で分割される
 
-  https://staltz.com/unidirectional-user-interface-architectures.html
+- コンポーネントの状態及び手続きはstateに保持される
+  state, statelessコンポーネントの話
 
-- redux
-  flux思想で実装されたライブラリ
+- 親コンポーネントは子コンポーネントに状態及び手続きを配布する
+  子コンポーネントは基本的にstatelessであるべき
 
-* メリット
-- UX
-  push通知、ワインディングなどのアニメーション
+* の前に興味深いpostを紹介
+- 個人的にangularをdisるつもりはないのですが...
+- Angular 2/4が狭量で遅すぎる理由
+http://postd.cc/why-angular-2-4-is-too-little-too-late/
 
-- 高速なページ遷移
-  SSRに比べて転送量が少ないので体感的に早い
-  clientに処理を寄せることでサーバ負荷対策にも
-  仮想DOM技術の発達
+* 今回のテーマはredux
+- 前回作成したtodoアプリの状態管理をreduxで管理する
+  
+- react + reduxはMVC, MVVMのような責任分割とは感覚が異なる(気がする)
 
-- サーバAPIの再利用性
-  マルチプラットフォーム対応
-  タブレット、スマホアプリ用のAPIにも使い回せる
+* reduxとは
+- 状態管理を行う薄いライブラリ
 
-- サーバ、フロントの分業化
-  これ結構大事
+- reduxの概念はfluxのドキュメントが判りやすい
+  http://facebook.github.io/flux/docs/in-depth-overview.html#content
 
-* デメリット
-- 実装コスト
-  最初は結構難しい
+- action
+  dispatcherを実行する際の引数(type, objects)を管理するためのヘルパー
+  実装自体はactionに定義しないのでview <-> storeへのインタフェース的な役割
+  reactのイベントやコンストラクタから呼びだされる
 
-- jsの初期ロード問題
-  必要なモジュールのみロードするので
-  現在は問題ないかと思われる(virtual domは早い)
+- dispatcher
+  actionから渡された具体的な処理を実行する関数の集り
+  storeの状態変更の具体的な実装を行う
+  
+- store
+  dispatcherにて変更された状態をviewへ流しこむ
+  store自体に何か実装を行うことはない。
 
-- 開発者が少ない
+- view
+  reactのコンポーネント
 
-- だから必ずしもSPAが必須というわけではない
+* 背景
+- アプリが大きくなるにつれ状態管理がしんどくなってきた
 
-* 開発環境の構築
-- nodejsほぼ必須(nodebrew, nvmおすすめ)
-
-- create-react-appをインストール & 起動
-
-- 開発に必要なnpmモジュールは大体整っている
-  - es6トランスパイラ(babel)
-  - ホットデプロイ(webpack-dev-server)
-  - テストフレームワーク(jest)
-  - 構文チェック(eslint)
-
-#+begin_src shell
-$ npm install -g create-react-app
-$ create-react-app react-sample-01
-$ cd react-sample-01
-$ npm start
-#+end_src
-
-* babel, es6, jsx
-
-- hello react
-#+begin_src js
-const App = () => {
-  const title = "hello react";
-  return (
-    <h1>{title}</h1>
-  );
-};
-#+end_src
-
-* babel repl
-- babel replが分かり易い
-  https://babeljs.io/repl/
-
-- トランスパイル前
+* しんどい理由1 バケツリレー
+- 親コンポーネントからのバケツリレー問題
+  - state- > statetelssコンポーネントまでデータ、メソッドをリレーする必要がある
+  - 例えば以下の例はBコンポーネントがstate, methodをリレーするだけになっている
+  - コンポーネントの階層が増えるとBのようなコンポーネントがコードの見通しを悪くする
+  - コンポーネントが増えるにつれて機能追加、保守がしんどくなってくる
 
 #+begin_src js
-const App = () => {
-  const title = "hello";
-  return (
-    <h1>{title}</h1>
-  );
-};
-#+end_src
-
-- トランスパイル後
-
-#+begin_src js
-var App = function App() {
-  var title = "hello";
-  return React.createElement("h1", null, title);
-};
-#+end_src
-
-* react jsx
-
-- { }の中にjsを記述する
-- テンプレートエンジンのようなもの
-
-#+begin_src js
-return (
-  <ul>
-    { [...Array(10).keys()].map(i => <li>オラ</li>) }
-  </ul>
-);
-
-#+end_src
-
-* 条件分岐
-
-- 最初のうちはキモいが慣れれば便利
-
-#+begin_src js
-const warn = true;
-
-return (
-  <p>
-    {warn ? <strong>warning!!</strong> : "not worning" }
-  </p>
-);
-#+end_src
-
-* ここからチュートリアル
-
-* タイトル
-
-- todoアプリを作成する
-
-#+begin_src js
-const title = "todo app";
-
-return (
-  <div>
-    <h2>{title}</h2>
-  </div>
-);
-#+end_src
-
-* データとイテレータ
-
-#+begin_src js
-  const todos = [
-    {id: 1, name: "react勉強する", done: true},
-    {id: 2, name: "更にreactを勉強する", done: false}
-  ];
-
-  const renderTodo = (todo) => {
-    return (
-      <ul>
-        <li>{todo.id}: {todo.name}</li>
-      </ul>
-    );
-  };
-
+const C = ({ collection, addData }) => {
   return (
     <div>
-      <h2>{title}</h2>
-      {todos.map(todo => renderTodo(todo))}
+      {collection.map( data => <div>{data}</div> )}
     </div>
   );
-#+end_src
+};
 
-* スタイル
+const B = ({ collection, addData }) => {
+  return (
+    <div>
+      <C collection={collection} addData={addData} />
+    </div>
+  );
+};
 
-#+begin_src js
-  const renderTodo = (todo) => {
-    const style = {
-      textDecoration: todo.done ? "line-through" : "none"
-    };
-    
-    return (
-      <ul style={style}>
-        <li>{todo.id}: {todo.name}</li>
-      </ul>
-    );
-  };
-#+end_src
-
-* 静的なページが完成
-
-* class(1)
-- todoをトグルする機能が欲しい
-- ゆえに状態を保持したい
-- ReactのComponentを継承する
-
-#+begin_src js
-class App extends Component {
+class A extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      todos: [
-        {id: 1, name: "react勉強する", done: true},
-        {id: 2, name: "更にreactを勉強する", done: false}
-      ]
-    };
+      data: [1,2,3]
+    }
   }
-...
-#+end_src
 
-* ちょっと脱線
+  addData = (data) => {
+    this.setState({
+      data: [...this.state.data, data]
+    });
+  };
 
-react思想(thinking in react)によるとコンポーネントは最小の単位
-よってstatelessにするのがオススメらしい。
-componentはjs->domへの変換器であるべき。
-
-- 理由
-  テスト範囲(どう使うかを自由に決めることができる)
-  羃等性(何回実行しても結果が同じ)
-  再利用性
-  責任が多いコンポーネントはあきらめる？ <= redux containerで頑張る?
-
-* class(2)
-
-- renderメソッド以下に処理を移動
-
-#+begin_src js
   render() {
-    const title = "todo app";
-    ...
-#+end_src
-
-* DOMへイベントリスナを登録
-
-- onClick, onKeyDown, onFocusなど色々ある
-  
-https://facebook.github.io/react/docs/events.html
-
-#+begin_src js
-      return (
-        <ul style={style}>
-          <li>{todo.id}: {todo.name}</li>
-          <button onClick={() => toggleTodo(todo.id)}>
-            toggle todo
-          </button>
-        </ul>
-      );
-#+end_src
-
-* トグルするメソッドを追加
-
-- setStateでthis.stateを更新できる
-  - setStateは基本イミュータブル
-  - this.stateへ直接値を代入することはアンチパターン
-
-- 更新した情報は画面に反映する
-
-#+begin_src js
-    const toggleTodo = (todo_id) => {
-      this.setState({
-        todos: this.state.todos.map(
-          todo => todo.id === todo_id ?
-            {...todo, done: !todo.done} : todo
-        )
-      });
-    };
-#+end_src
-
-- {...x, y} シンタックスシュガー
-  - Object.assing()と同等
-
-#+begin_src js
-// es6
-{...todo, done: !todo.done}
-
-// es5
-Object.assign(todo, { done: !todo.done })
-#+end_src
-
-* イベントリスナ, DOM参照
-
-- refで指定したDOMの値はthis.refs.xxx.valueで取得できる
-
-#+begin_src js
-        <input
-          type="text"
-          ref="todoText"
-          onKeyPress={(e) => addTodo(e)} />
-#+end_src
-
-* todoを追加するメソッド
-
-- sortはレシーバを変更する副作用があるので注意
-
-#+begin_src js
-    const addTodo = (e) => {
-      if (e.key !== "Enter") return;
-
-      const next_id = this.state.todos.slice()
-            .sort( (a, b) => b.id - a.id )[0].id + 1;
-
-      const newTodo = {
-        id: next_id,
-        name: this.refs.todoText.value,
-        done: false
-      };
-
-      this.setState({ todos: [...this.state.todos, newTodo] });
-
-      this.refs.todoText.value = "";
-    };
-#+end_src
-
-- [...]シンタックスシュガー
-  - Array.proptype.concatと同等
-
-#+begin_src js
-// es6
-[...array, object]
-
-// es5
-array.concat(object)
-#+end_src
-
-* doneをフィルタする機能
-
-- state
-#+begin_src js
-       todos: [
-         {id: 1, name: "react勉強する", done: true},
-         {id: 2, name: "更にreactを勉強する", done: false}
-+      ],
-+      hideDone: false
-#+end_src
-
-- handler, filter
-#+begin_src js
-    const hideDone = () => {
-      this.setState({ hideDone: !this.state.hideDone });
-    };
-
-    const todos = this.state.hideDone
-          ? this.state.todos.filter(todo => todo.done === false)
-#+end_src
-
-- view
-#+begin_src js
--          {this.state.todos.map(todo => <Todo todo={todo} toggleTodo={toggleTodo} />)}
-+          <button onClick={hideDone}>hide done</button>
-#+end_src
-
-* todoをrenderする機能をコンポーネント化
-
-- renderTodoをコンポーネントに切り出す
-- unit testや共通化のため
-
-#+begin_src js
-class Todo extends Component {
-  render() {
-    const { todo, toggleTodo } = this.props;
-
-    const style = {
-      textDecoration: todo.done ? "line-through" : "none"
-    };
-    
     return (
-      <ul style={style}>
-        <li>{todo.id}: {todo.name}</li>
-        <button onClick={() => toggleTodo(todo.id)}>
-          toggle todo
-        </button>
-      </ul>
+      <div>
+        <B data={this.state.data}
+           addData={this.addData} />
+      </div>
     );
   }
 }
-
-...
-
-{this.state.todos.map(todo => <Todo todo={todo} toggleTodo={toggleTodo} />)}
 #+end_src
 
-* コンポーネント間のデータ、メソッド授受
+* しんどい理由2 asyncレイヤ
+- 非同期レイヤで状態管理が更に煩雑になる問題
 
-- 定義したコンポーネントは<Todo />で利用できる
-- 親コンポーネントからデータ、メソッドを渡せる
+- 例えば以下のような非同期処理をコールバックするのが苦痛
+  - modal起動
+    setStateでmodal openをtrueにする
 
-#+begin_src js
-class Todo extends Component {
-...
-}
+  - get(async)
+    promise + fetchでserverからデータを取得
+    fetchしたデータをsetStateでハメる
+    (modal bodyの構築はコールバックしておく必要がある)
 
-<Todo todo={todo} toggleTodo={toggleTodo}
-#+end_src
+  - modal bodyのdomを構築
 
-- これで子が発火させたイベントを親が購読できる
+  - 編集, submit 
+    ユーザアクション
 
-eventを発火(child) -> データを更新(parent) -> 子に更新後のデータを渡す(parent)
+  - post(async) 
+    modalにて編集されたデータをサーバにデータをpostする
+    (バリデーションエラーの表示があるためmodal closeはコールバック)
 
-* propsとstate
+  - modalを閉じる
 
-props: 外部から渡されたオブジェクト(read only)
-state: 内部で利用するオブジェクト(read write)
-
-* prop-types
-
-- コンポーネントのpropsに型によるバリデーションを適用できる
-- interface定義のようなもの
-- 詳細は以下 array valueの型, object内のkey:型など色々できる
-
-  https://github.com/facebook/prop-types
-
-#+begin_src js
-import PropTypes from "prop-types";
-...
-Todo.propTypes = {
-  todo: PropTypes.number.isRequired,
-  toggleTodo: PropTypes.func.isRequired
-};
-#+end_src
-
-- typeに違反した場合、例外をスローしないのが微妙
-- あくまでpropTypesは簡易機能なので掘り下げるならflowかtypescript
-
-https://flow.org/en/docs/getting-started/
-
-
-
-* unittest
-
-- テスト用ディレクトリの作成
--  __tests__ディレクトリ配下、xxx.test.jsがテスト対象
-- npm testで自動実行
+* 導入
 
 #+begin_src shell
-$ mkdir __tests__
-$ touch __tests__/App.test.js
-$ touch __tests__/Todo.test.js
+$ npm install --save redux
+#+end_src
+
+* 実装方針
+- reduxは薄いレイヤなのでテストフレームワークを活用し単体で実装する
+
+* テストフレームワーク(jest)入門1
+- reducer.test.jsを作成, npm testを実行
+  - 勉強会では便宜上ansi-termで実行するが、普通のターミナルがオススメ
+
+- npm testが実行するファイル
+  - "__tests__" ディレクトリに格納された拡張子がjsのファイル
+  - .test.js or .spec.jsのファイル
+
+- 試しに以下のコードを実行してみる
+
+#+begin_src js
+$ touch reducer.test.js
+$ echo "console.log('foobar');" > reducer.test.js
 $ npm test
 #+end_src
 
-* test テストのテスト
-
-- __tests__/App.test.js
-
+* テストフレームワーク(jest)入門2
+- doubleという引数を2倍するだけのメソッド
+  
 #+begin_src js
-import React from "react";
-import ReactDOM from "react-dom";
+const double = (n) => {
+  return n * 2;
+};
 
-import Todo from "../Todo";
+describe("double関数のテスト", () => {
+  it("引数を2倍したものを返却する", () => {
+    const result = double(2);
+    const expected = 4;
 
-describe("Todo", () => {
-
-  it("テストのテスト", () => {
-    expect(true).toEqual(true);
+    expect(result).toEqual(expected);
   });
 
 });
 #+end_src
 
-* コンポーネント毎にファイルを分割
+* reducer
+- reduxのstoreはreducer関数を通して変更される
 
-- ユニットテストの準備
-- コンポーネント毎にファイルを分割したほうがテストしやすい
-  - index.js -> [Todo.js, App.js, index.js]
+- reducerは純粋な関数(pure function)で実装される
+  - pure functionとは副作用を伴わない関数のこと
+  - 純粋関数についての議論は長くなるので別の機会にでも...
 
-* コンポーネントが初期化できるかテスト
+- reactはreactive(データが常に循環する)
+  - 副作用で意としないデータ破壊は時として致命的なことも
+
+* actionの実装例
+
+- typeキーは必須
+- 他キーに更新したいデータを格納する
+- 本例では追加したいtodoオブジェクトを引数に渡している
 
 #+begin_src js
-  it("without crashing", () => {
-    const root = document.createElement("root");
-    ReactDOM.render(
-      <Todo todo={{}} toggleTodo={() => null} />,
-      root
-    );
+const addTodo = (todo) => {
+  return {
+    type: "ADD_TODO",
+    todo: todo
+  };
+};
+#+end_src
+
+* reducerの実装例
+
+- initialState = 初期データ
+- actionから渡されたtodoオブジェクトをconatしているだけ
+#+begin_src js
+const initialState = [
+  {id: 1, name: "react勉強する", done: true},
+  {id: 2, name: "更にreactを勉強する", done: false}
+];
+
+const todoReducer = (state = initialState, action) => {
+  switch ( action.type ) {
+  case "ADD_TODO":
+    // [ ...ary, obj ] は ary.dconcat(obj)のシンタックスシュガー
+    return [...state, action.todo];
+  default:
+    return state;
+  }
+};
+#+end_src
+
+* [...]シンタックスシュガー
+
+- [...]はconcatと同じ 配列に値を追加し返却する
+#+begin_src js
+const aryA = [1,2,3];
+const pushValue = 4;
+
+[ ...aryA, pushValue ] // => [1,2,3,4]
+aryA.concat(pushValue) // => [1,2,3,4]
+#+end_src
+
+* addTodoのtest
+
+#+begin_src js
+describe("todoReducerのテスト", () => {
+
+  it("ADD_TODO", () => {
+    const newTodo = { id: 3, name: "reducerを勉強する", done: false };
+    const result = todoReducer(initialState, addTodo(newTodo));
+
+    // 期待する値はinitialStateにnewTodoをconcatしたもの
+    const expected = [
+      {id: 1, name: "react勉強する", done: true},
+      {id: 2, name: "更にreactを勉強する", done: false},
+      newTodo
+    ];
+    expect(result).toEqual(expected);
+  });
+});
+#+end_src
+
+* toggleTodoの実装
+
+- action
+  - doneをトグルしたいtodoのidを渡している
+
+#+begin_src js
+const toggleTodo = (todo_id) => {
+  return {
+    type: "TOGGLE_TODO",
+    todo_id: todo_id
+  };
+};
+#+end_src
+
+- reducer
+- ちょっと難解だが引数のtodo_idのdoneをトグルしているだけ
+
+#+begin_src js
+  case "TOGGLE_TODO":
+    const newTodo = state.map(todo => {
+      if (todo.id === action.todo_id) {
+        return { ...todo, done: !todo.done };
+      }
+      else {
+        return todo;
+      }
+    });
+
+    return newTodo;
+#+end_src
+
+* Array.prototype.map
+
+Array.prototype.map
+#+begin_src js
+const array = [ 1, 2, 3 ];
+
+// 配列の各要素を2倍して返却する
+array.map(a => a * 2); // [2, 4, 6]
+
+// 配列の各要素が2の倍数であれば0を返却する
+array.map(a => {
+  if ( a % 2 === 0 ) {
+    return 0;
+  }
+  else {
+    return a;
+  }
+}); // [1,0,3]
+#+end_src
+
+* {...}シンタックスシュガー
+
+- オブジェクトをマージする
+#+begin_src js
+
+// key, valueを追加
+let todo = { id: 1, name: "foo" };
+{ ...todo, done: false }; // { id: 1, name: "foo", done: false }
+
+// 指定したkeyのvalueを上書き
+let todo = { id: 1, name: "foo", done: false };
+{ ...todo, done: !todo.done }; // { id: 1, name: "foo", done: true }
+
+// 複数のkey, valueを追加
+let todo = { id: 1 };
+{ ...todo, name: "foo", done: false }; // { id: 1, name: "foo", done: true }
+#+end_src
+
+* ということでtoggle reducerをリファクタ
+
+- 冗長なのでシンプルにする
+  - リファクタした瞬間にテストが走るのがイイ
+
+#+begin_src js
+  case "TOGGLE_TODO":
+    return state.map(todo => {
+      return todo.id === action.todo_id
+      ? { ...todo, done: !todo.done }
+      : todo;
+    });
+#+end_src
+
+* toggleTodoテストの実装
+
+#+begin_src js
+  it("TOGGLE_TODO", () => {
+    const toggleTodoId = 2;
+    const result = todoReducer(initialState, toggleTodo(toggleTodoId));
+    const expected = [
+      {id: 1, name: "react勉強する", done: true},
+      {id: 2, name: "更にreactを勉強する", done: true}, // doneがtrue->false
+    ];
+
+    expect(result).toEqual(expected);
   });
 #+end_src
 
-* propsとして渡したデータをrenderしているか
+* addTodoに機能を追加
 
-- 仮想DOMをシミュレートするライブラリ
-#+begin_src shell
-$ npm install --save enzyme react-test-renderer
+- idは自動でincrementされたものが付与される
+- doneのデフォルト値はfalse
+
+- action
+#+begin_src js
+const addTodo = (name) => {
+  return {
+    type: "ADD_TODO",
+    name: name
+  };
+};
 #+end_src
 
+- reducer
 #+begin_src js
-  it("todo.nameが出力される", () => {
-    const root = document.createElement("root");
-    const wrapper = shallow(
-      <Todo todo={{id: 1, name: "foobar", done: false}}
-            toggleTodo={() => null} />
-    );
+  case "ADD_TODO":
+    // [ ...ary, obj ] は ary.dconcat(obj)のシンタックスシュガー
+    const newTodo = {
+      id: state.slice().sort( (a, b) => b.id - a.id )[0].id + 1,
+      name: action.name,
+      done: false
+    };
 
-    expect(wrapper.find("li").contains("foobar")).toEqual(true);
+    return [...state, newTodo];
+#+end_src
+
+- test
+#+begin_src js
+  it("ADD_TODO", () => {
+    const newTodo = "reducerを勉強する";
+    const result = todoReducer(initialState, addTodo(newTodo));
+
+    // 期待する値はinitialStateにnewTodoをconcatしたもの
+    const expected = [
+      {id: 1, name: "react勉強する", done: true},
+      {id: 2, name: "更にreactを勉強する", done: false},
+      {id: 3, name: newTodo, done: false}
+    ];
+    expect(result).toEqual(expected);
   });
 #+end_src
 
-* button clickで発火するか
+* 作成したreducerをredux storeに組み込む
 
-- eventをシミュレートするライブラリ
-#+begin_src shell
-$ npm install --save sinon
+- reactと連携するための下準備
+- react viewを購読(subscribe)する必要があるので
+#+begin_src js
+import { createStore } from "redux";
+...
+const store = createStore(todoReducer);
 #+end_src
+
+* storeのテスト
+
+- dispatchにactionを渡す
+- getStateで現在のstoreの状態を取得する
+#+begin_src js
+describe("storeのテスト", () => {
+  it("ADD_TODO", () => {
+    const newTodo = "storeを勉強する";
+    store.dispatch(addTodo(newTodo));
+    const result = store.getState();
+    const expected = [
+      {id: 1, name: "react勉強する", done: true},
+      {id: 2, name: "更にreactを勉強する", done: false},
+      {id: 3, name: newTodo, done: false}
+    ];
+
+    expect(result).toEqual(expected);
+  });
+});
+#+end_src
+
+* reducer, actionを別ファイルに切り出し
+15/reduxブランチを参照
+
+* reactとreduxをconnectする
+
+- index.js
+  - 全コンポーネントにstoreを流しこむ
+#+begin_src js
++import store from "./reducer";
++import { Provider } from "react-redux";
+ import App from "./App";
+ 
+ ReactDOM.render(
+-  <App />,
++  <Provider store={store}>
++    <App />
+#+end_src
+
+* reactとreduxをconnectする
+- App.js
+  - 裏側にstoreが入りこんでいるのでconnectする
+  - stateをstoreに置換する
 
 #+begin_src js
-  it("toggleボタンでイベントが発火する", () => {
-    const root = document.createElement("root");
-
-    const toggleTodo = sinon.spy();
-
-    const wrapper = mount((
-      <Todo todo={{id: 1, name: "foobar", done: false}}
-            toggleTodo={toggleTodo} />
-    ));
-
-    wrapper.find("button").simulate("click");
-
-    expect(toggleTodo.calledOnce).toEqual(true);
-  });
++import { connect } from "react-redux";
+ import Todo from "./Todo";
+ 
+ class App extends Component {
+@@ -68,4 +69,12 @@ class App extends Component {
+   }
+ };
++          {this.props.todos.map(todo => 
+           <Todo todo={todo} toggleTodo={toggleTodo} />)}
+ 
++const mapStateToProps = state => {
++  return {
++    todos: state
++  };
++};
++
++App = connect(mapStateToProps)(App);
 #+end_src
 
-* 終了
+* setStateをdispatchに置換する
+
+- このままだと、add,toggleが動作しない
+- setStateを実行するメソッドをdispatchに置換する
+
+- まずはaddTodoから
+#+begin_src js
++import { addTodo } from "./actions";
+ 
+ class App extends Component {
+   constructor(props) {
+@@ -29,17 +30,7 @@ class App extends Component {
+     const addTodo = (e) => {
+       if (e.key !== "Enter") return;
+ 
+-      const next_id = this.state.todos.slice()
+-            .sort( (a, b) => b.id - a.id )[0].id + 1;
+-
+-      const newTodo = {
+-        id: next_id,
+-        name: this.refs.todoText.value,
+-        done: false
+-      };
+-
+-      this.setState({ todos: [...this.state.todos, newTodo] });
+-
++      this.props.addTodo(this.refs.todoText.value);
+       this.refs.todoText.value = "";
+     };
+ 
+@@ -69,12 +60,18 @@ class App extends Component {
+   }
+ };
+ 
++const mapDispatchToProps = dispatch => {
++  return {
++    addTodo: name => dispatch(addTodo(name))
++  };
++};
++
+ 
+-App = connect(mapStateToProps)(App);
++App = connect(mapStateToProps, mapDispatchToProps)(App);
+
+#+end_src
+
+* setStateをdispatchに置換する
+
+- Todo.js
+#+begin_src js
++import { connect } from "react-redux";
++import { toggleTodo } from "./actions";
+
+-        <button onClick={() => toggleTodo(todo.id)}>
++        <button onClick={() => this.props.toggleTodo(todo.id)}>
+ 
++const mapStateToProps = state => {
++  return { };
++};
++
++const mapDispatchToProps = dispatch => {
++  return {
++    toggleTodo: todo_id => dispatch(toggleTodo(todo_id))
++  };
++};
++
++Todo = connect(mapStateToProps, mapDispatchToProps)(Todo);
+#+end_src
+
+- App.js
+  - 不要なメソッドを削除する
+#+begin_src js
+-    const toggleTodo = (todo_id) => {
+-      this.setState({
+-        todos: this.state.todos.map(
+-          todo => todo.id === todo_id ?
+-            {...todo, done: !todo.done} : todo
+-        )
+-      });
+-    };
+-
+ 
+-          <Todo todo={todo} toggleTodo={toggleTodo} />)}
++          <Todo todo={todo} />)}
+#+end_src
+
+* hideDoneの存在を忘れていた
+
+- doneを非表示にするのを忘れていたので
+#+begin_src js
+     const todos = this.state.hideDone
++          ? this.props.todos.filter( todo => !todo.done )
++          : this.props.todos;
+
+          {todos.map(todo => 
+          <Todo todo={todo} />)}
+#+end_src
+
+- もうstate.todosは不要になった
+#+begin_src js
+     this.state = {
+-      todos: [
+-        {id: 1, name: "react勉強する", done: true},
+-        {id: 2, name: "更にreactを勉強する", done: false}
+-      ],
+       hideDone: false
+#+end_src
