@@ -14,7 +14,7 @@ class Todo extends Component {
     return (
       <ul style={style}>
         <li>{todo.id}: {todo.name}</li>
-        <button onClick={() => this.props.toggleTodo(todo.id)}>
+        <button onClick={() => toggleTodo(todo.id)}>
           toggle todo
         </button>
       </ul>
