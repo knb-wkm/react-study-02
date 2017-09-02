@@ -18,15 +18,6 @@ class App extends Component {
   render() {
     const title = "todo app";
 
-    const toggleTodo = (todo_id) => {
-      this.setState({
-        todos: this.state.todos.map(
-          todo => todo.id === todo_id ?
-            {...todo, done: !todo.done} : todo
-        )
-      });
-    };
-
     const addTodo = (e) => {
       if (e.key !== "Enter") return;
 
@@ -54,7 +45,7 @@ class App extends Component {
           <button onClick={hideDone}>hide done</button>
 
           {this.props.todos.map(todo => 
-          <Todo todo={todo} toggleTodo={toggleTodo} />)}
+          <Todo todo={todo} />)}
       </div>
     );
   }
