@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import Todo from "./Todo";
+import { addTodo } from "./actions";
 
 class App extends Component {
   constructor(props) {
@@ -29,17 +30,7 @@ class App extends Component {
     const addTodo = (e) => {
       if (e.key !== "Enter") return;
 
-      const next_id = this.state.todos.slice()
-            .sort( (a, b) => b.id - a.id )[0].id + 1;
-
-      const newTodo = {
-        id: next_id,
-        name: this.refs.todoText.value,
-        done: false
-      };
-
-      this.setState({ todos: [...this.state.todos, newTodo] });
-
+      this.props.addTodo(this.refs.todoText.value);
       this.refs.todoText.value = "";
     };
 
@@ -69,12 +60,18 @@ class App extends Component {
   }
 };
 
+const mapDispatchToProps = dispatch => {
+  return {
+    addTodo: name => dispatch(addTodo(name))
+  };
+};
+
 const mapStateToProps = state => {
   return {
     todos: state
   };
 };
 
-App = connect(mapStateToProps)(App);
+App = connect(mapStateToProps, mapDispatchToProps)(App);
 
 export default App;
