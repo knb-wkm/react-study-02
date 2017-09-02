@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import Todo from "./Todo";
 
 class App extends Component {
@@ -61,11 +62,19 @@ class App extends Component {
 
           <button onClick={hideDone}>hide done</button>
 
-          {todos.map(todo => 
+          {this.props.todos.map(todo => 
           <Todo todo={todo} toggleTodo={toggleTodo} />)}
       </div>
     );
   }
 };
+
+const mapStateToProps = state => {
+  return {
+    todos: state
+  };
+};
+
+App = connect(mapStateToProps)(App);
 
 export default App;
