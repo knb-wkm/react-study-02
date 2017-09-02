@@ -7,10 +7,6 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      todos: [
-        {id: 1, name: "react勉強する", done: true},
-        {id: 2, name: "更にreactを勉強する", done: false}
-      ],
       hideDone: false
     };
   }
@@ -30,8 +26,8 @@ class App extends Component {
     };
 
     const todos = this.state.hideDone
-          ? this.state.todos.filter(todo => todo.done === false)
-          : this.state.todos;
+          ? this.props.todos.filter( todo => !todo.done )
+          : this.props.todos;
 
     return (
       <div>
@@ -44,7 +40,7 @@ class App extends Component {
 
           <button onClick={hideDone}>hide done</button>
 
-          {this.props.todos.map(todo => 
+          {todos.map(todo => 
           <Todo todo={todo} />)}
       </div>
     );
